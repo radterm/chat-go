@@ -2,6 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import './chat.css';
 import React from 'react';
+import { Routes, Route, Link, Navigate } from "react-router-dom";
 
 class ChatForm extends React.Component {
   constructor(props) {
@@ -112,23 +113,20 @@ class ChatHistory extends React.Component {
   }
 }
 
-class App extends React.Component {
+class ChatApp extends React.Component {
   constructor(props){
     super(props);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.url = props.url;
+    this.socketUrl = props.socketUrl;
     this.state = {
-      chats : [
-        // new chat("Player 1", "13:78", "Hi there!"),
-        // new chat("Player 2", "14:78", "Hello, how are you?!")
-      ],
-      player: "Player 1"
+      chats : [],
+      player: props.username
     };
   }
   handleSubmit(message){
     var newchats = this.state.chats;
     var d = new Date()
-    var newchat = new chat("Player 1", d.toLocaleTimeString(), message);
+    var newchat = new chat(this.state.player, d.toLocaleTimeString(), message);
     newchats.push(newchat);
     this.setState({chats: newchats}, () => {
       var chatmsg = JSON.stringify(newchat);
@@ -142,19 +140,203 @@ class App extends React.Component {
     var newchats = this.state.chats;
     var newchat = new chat(chatMsg.name, chatMsg.time, chatMsg.msg);
     newchats.push(newchat);
-    console.log("Got message", newchat.msg, "from", newchat.name);
     this.setState({chats: newchats});
   }
   componentDidMount(){
-    this.socket = new WebSocket(this.url);
-    this.socket.onopen = function(e) {
-      console.log("Connection established")
-    };
+    this.intializeWebSocket()
+  }
+  intializeWebSocket(){
+    this.socket = new WebSocket(this.socketUrl);
     this.socket.onmessage = (e) => {
       this.handleSocketMessage(e.data)
     }
   }
   render(){
+    return (
+      <div className="App">
+        <ChatHistory chats={this.state.chats}></ChatHistory>
+        <ChatForm alertSubmit={this.handleSubmit}></ChatForm>
+      </div>
+    );
+  }
+}
+
+class LoginApp extends React.Component {
+  constructor(props) {
+    super(props);
+    this.url = props.tokenUrl
+    this.updateMasterToken = props.updateToken
+    this.state = {username: '', password: '', authState: 'unauthenticated'};
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.updateToken = this.updateToken.bind(this);
+    this.authFailed = this.authFailed.bind(this);
+  }
+
+  handleChange(source, event) {
+    switch(source) {
+      case "username":
+        this.setState({username: event.target.value}); 
+        break;
+      case "password":
+        this.setState({password: event.target.value}); 
+        break;
+    }
+    this.setState({value: event.target.value}); 
+  }
+
+  postData(url = '', username, password) {
+    fetch(url, {
+      method: 'POST',
+      mode: 'cors', 
+      cache: 'no-cache',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      redirect: 'follow', 
+      referrerPolicy: 'no-referrer', 
+      body: "name=" + username + "&password=" + password
+    }).then((response)=>{
+      if(!response.ok){
+        console.log("Failed token fetch with status",response.status);
+        this.authFailed();
+        return;
+      }
+      return response.json();
+    }).then(data => {
+      console.log("Got json respose", data);
+      if(data.token!=null) {
+        this.updateToken(data.token, this.state.username);
+      }
+      else {
+        this.authFailed();
+      }
+    });
+  }
+
+  updateToken(token, name) {
+    this.setState({authState: "authenticated"}, ()=>this.updateMasterToken(token, name));
+  }
+
+  authFailed() {
+    console.log("authFailed")
+    this.setState({authState: "failed"}, ()=>this.updateMasterToken(0, ""));
+  }
+
+  handleSubmit(event) {
+    var formdata = new FormData(event.target);
+    this.postData(this.url, formdata.get("username"), formdata.get("password"))
+    this.setState({authState: "authenticating"});
+    event.preventDefault();
+  }
+
+  render(){
+    return (
+      <form onSubmit={this.handleSubmit}>
+
+        <fieldset>
+          
+          <input type="text" value={this.state.username} placeholder="Type username" 
+                  autoFocus onChange={(e)=>this.handleChange('username',e)} name="username"/> <br/>
+          <input type="password" value={this.state.password} onChange={(e)=>this.handleChange('password',e)}
+                 name="password" /> <br />
+          <input type="submit" />
+
+        </fieldset>
+        <span>{this.state.authState}</span>
+
+      </form>
+    );
+  }
+}
+
+function LogoutApp(props) {
+  const logOutButton = (
+    <button onClick={
+      ()=>{
+        console.log("Resetting token");
+        props.resetToken();
+      }
+    } >Logout</button>
+  );
+  const loggedOutMsg = (<span>Logged out successfully!</span>);
+  const logOutWidget = props.loggedIn ? logOutButton : loggedOutMsg ;
+  return (
+    <div>
+      {logOutWidget}
+    </div>
+  )
+}
+
+const tokenCookieName = "authorization-token" ;
+const usernameCookieName = "username";
+
+function getCookie(cname) {
+  let name = cname + "=";
+  let decodedCookie = decodeURIComponent(document.cookie);
+  let ca = decodedCookie.split(';');
+  for(let i = 0; i <ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      token: "", 
+      username: "",
+      authenticated: false
+    };
+  }
+
+  componentDidMount() {
+    let lastToken = getCookie(tokenCookieName);
+    let lastUser = getCookie(usernameCookieName);
+    console.log("Last User:", lastUser, ", Last token:", lastToken);
+    let authed = false;
+    if(lastToken!=="" && lastUser!==""){
+      authed = true;
+    }
+    else {
+      console.log("Not authed from before");
+      return;
+    }
+    console.log("Authed from before, authed", authed);
+    this.setState({
+      token: lastToken, 
+      username: lastUser,
+      authenticated: authed
+    });
+  }
+
+  render() {
+    const setToken = (tok, name)=>{
+      document.cookie = tokenCookieName    + "=" + tok  + "; path=/;";
+      document.cookie = usernameCookieName + "=" + name + "; path=/;";
+      this.setState({token: tok, username: name, authenticated: true});
+    };
+    const resetToken = ()=>{
+      document.cookie = tokenCookieName    + "=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/;";
+      document.cookie = usernameCookieName + "=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/;";
+      this.setState({token: "", username: "", authenticated: false});
+    }
+    // const loggedOut = ()=>{return this.state.tok===0;};
+    const chatapp = (<ChatApp socketUrl={this.props.socketUrl} username={this.state.username} />);
+    const loginapp = (<LoginApp tokenUrl={this.props.tokenUrl} updateToken={setToken} />);
+    const navigatetologin = (<Navigate replace to="/login" />);
+    const navigatetohome = (<Navigate replace to="/" />);
+    const loginwidget = this.state.authenticated ? navigatetohome : loginapp;
+    const homewidget = this.state.authenticated ? chatapp : navigatetologin ;
     return (
       <div className="App">
         <header className="App-header">
@@ -163,11 +345,17 @@ class App extends React.Component {
             Chat App
           </span>
         </header>
-        <ChatHistory chats={this.state.chats}></ChatHistory>
-        <ChatForm alertSubmit={this.handleSubmit}></ChatForm>
+        <Routes>
+          <Route path="/" element={homewidget} />
+          <Route path="/login" element={loginwidget} />
+          <Route path="/logout" element={
+            <LogoutApp resetToken={resetToken} loggedIn={this.state.authenticated} />
+          } />
+        </Routes>
       </div>
     );
   }
 }
 
 export default App;
+export {tokenCookieName , usernameCookieName};

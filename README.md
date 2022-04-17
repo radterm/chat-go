@@ -12,3 +12,7 @@ Then run the front end server
 cd frontend/chat-go
 npm start
 ```
+
+# New Feature
+Use JWTs in the backend for all authentication. Check a specific cookie for a valid token for only websocket connections.
+The frontend wraps the JWT auth feature.

@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { BrowserRouter } from "react-router-dom";
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
@@ -11,11 +12,15 @@ const turl = new URL(locurl)
 console.log("Domain", turl.hostname)
 console.log("Port", turl.port)
 
-const url = "ws://" + turl.hostname + ":" + turl.port + "/api/v1/"
+const chatUrl = "ws://" + turl.hostname + ":" + turl.port + "/api/v1/chat/socket"
+const loginUrl = "http://" + turl.hostname + ":" + turl.port + "/api/v1/token"
 
 ReactDOM.render(
   <React.StrictMode>
-    <App url={url} />
+    <BrowserRouter>
+      {/*<App socketUrl={chatUrl} tokenUrl={loginUrl} lastAuth={lastAuth} />*/}
+      <App socketUrl={chatUrl} tokenUrl={loginUrl} />
+    </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')
 );
