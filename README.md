@@ -16,3 +16,6 @@ npm start
 # New Feature
 Use JWTs in the backend for all authentication. Check a specific cookie for a valid token for only websocket connections.
 The frontend wraps the JWT auth feature.
+
+# New Feature 2
+Talk to an actual Mongodb database

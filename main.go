@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -45,8 +46,10 @@ func main() {
 	id = 0
 
 	app := fiber.New()
+	authApp := GetNewAuthApp()
+	defer authApp.Close()
 
-	app.Post("/api/v1/token", Login)
+	app.Post("/api/v1/token", authApp.Login)
 
 	// JWT Middleware with Header = Authorization: Bearer
 	app.Use("/api/v1/auth", jwtware.New(jwtware.Config{
@@ -76,22 +79,24 @@ func main() {
 		return c.SendString("Welcome to the test " + name + "!\n")
 	})
 
-    app.Use("/api/v1/chat/socket", func(c *fiber.Ctx) error {
-        // IsWebSocketUpgrade returns true if the client
-        // requested upgrade to the WebSocket protocol.
-        log.Println("wesocket-use:  Called")
-        if websocket.IsWebSocketUpgrade(c) {
-            c.Locals("allowed", true)
-            log.Println("wesocket-use:  Upgrade requested")
-            return c.Next()
-        }
-        log.Println("wesocket-use:  Upgrade not requested, error")
-        return fiber.ErrUpgradeRequired
-    })
+	app.Use("/api/v1/chat/socket", func(c *fiber.Ctx) error {
+		// IsWebSocketUpgrade returns true if the client
+		// requested upgrade to the WebSocket protocol.
+		log.Println("wesocket-use:  Called")
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("allowed", true)
+			log.Println("wesocket-use:  Upgrade requested")
+			return c.Next()
+		}
+		log.Println("wesocket-use:  Upgrade not requested, error")
+		return fiber.ErrUpgradeRequired
+	})
 
 	app.Get("/api/v1/chat/socket", websocket.New(handleWebsocketChats))
 
-	log.Fatal(app.Listen("0.0.0.0:8000"))
+	errServer := app.Listen("0.0.0.0:8000")
+	errAuthAppClose := authApp.Close()
+	panic(fmt.Sprintf("Server Closed with:%v and DB closed with:%v", errServer, errAuthAppClose))
 }
 
 func handleWebsocketChats(c *websocket.Conn) {
