@@ -2,7 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import './chat.css';
 import React from 'react';
-import { Routes, Route, Link, Navigate } from "react-router-dom";
+import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
 
 class ChatForm extends React.Component {
   constructor(props) {
@@ -161,6 +161,13 @@ class ChatApp extends React.Component {
   }
 }
 
+function NavButton(props){
+  let navigate = useNavigate();
+  return (<button onClick={()=>{
+    navigate(props.path);
+  }}> {props.message} </button>);
+}
+
 class LoginApp extends React.Component {
   constructor(props) {
     super(props);
@@ -237,53 +244,37 @@ class LoginApp extends React.Component {
   }
 
   render(){
-    const switchToSignUp = (
-      <div>
-        Click <a href="/signUp">here</a> to sign up
-      </div>
-    );
-    const switchToLogIn = (
-      <div>
-        Click <a href="/logIn">here</a> to log in
-      </div>
-    );
-    const switchWidget = this.props.logIn ? switchToSignUp : switchToLogIn;
+
+    const switchButton = (<NavButton 
+      path={this.props.logIn ? "/signup" : "/login"} 
+      message={this.props.logIn ? "Sign Up" : "Log In"} 
+    ></NavButton>);
+    
+    const switchWidget = (<div>
+      {this.props.logIn ? "Dont have an account?" : "Already have an account?"} <br />
+      {switchButton}
+    </div>);
 
     return (
-      <form onSubmit={this.handleSubmit}>
+      <div>
+        <form onSubmit={this.handleSubmit}>
 
-        <fieldset>
-          
-          <input type="text" value={this.state.username} placeholder="Type username" 
-                  autoFocus onChange={(e)=>this.handleChange('username',e)} name="username"/> <br/>
-          <input type="password" value={this.state.password} onChange={(e)=>this.handleChange('password',e)}
-                 name="password" /> <br />
-          <button type="submit" >{this.props.logIn ? "Log In" : "Sign Up"}</button>
-        </fieldset>
+          <fieldset>
+            
+            <input type="text" value={this.state.username} placeholder="Type username" 
+                    autoFocus onChange={(e)=>this.handleChange('username',e)} name="username"/> <br/>
+            <input type="password" value={this.state.password} onChange={(e)=>this.handleChange('password',e)}
+                   name="password" /> <br />
+            <button type="submit" >{this.props.logIn ? "Log In" : "Sign Up"}</button>
+          </fieldset>
+          <span>{this.state.authState}</span> 
+        </form>
 
-        <span>{this.state.authState}</span>
+        <br /> <br /><br />
         {switchWidget}
-      </form>
+      </div>
     );
   }
-}
-
-function LogoutApp(props) {
-  const logOutButton = (
-    <button onClick={
-      ()=>{
-        console.log("Resetting token");
-        props.resetToken();
-      }
-    } >Logout</button>
-  );
-  const loggedOutMsg = (<span>Logged out successfully!</span>);
-  const logOutWidget = props.loggedIn ? logOutButton : loggedOutMsg ;
-  return (
-    <div>
-      {logOutWidget}
-    </div>
-  )
 }
 
 const tokenCookieName = "authorization-token" ;
@@ -351,31 +342,37 @@ class App extends React.Component {
       document.cookie = usernameCookieName + "=" + name + "; path=/;";
       this.setState({token: tok, username: name, authenticated: true});
     };
-    
-    // const loggedOut = ()=>{return this.state.tok===0;};
+
+    const logOutButton = this.state.authenticated ? (
+      <button class="logout" onClick={
+        ()=>{
+          console.log("Resetting token");
+          resetToken();
+        }
+      } >Logout</button>
+    ) : (<span></span>);
+
     const chatapp = (<ChatApp socketUrl={this.props.socketUrl} username={this.state.username} />);
-    const loginapp = (<LoginApp tokenUrl={this.props.tokenUrl} logIn={true} updateToken={setToken} />);
-    const signUpapp = (<LoginApp tokenUrl={this.props.signUpUrl} logIn={false} updateToken={setToken} />);
+    const loginapp = (<LoginApp history tokenUrl={this.props.tokenUrl} logIn={true} updateToken={setToken} />);
+    const signUpapp = (<LoginApp history tokenUrl={this.props.signUpUrl} logIn={false} updateToken={setToken} />);
     const navigatetologin = (<Navigate replace to="/login" />);
     const navigatetohome = (<Navigate replace to="/" />);
     const loginwidget = this.state.authenticated ? navigatetohome : loginapp;
     const signupwidget = this.state.authenticated ? navigatetohome : signUpapp;
     const homewidget = this.state.authenticated ? chatapp : navigatetologin ;
     return (
-      <div className="App">
+      <div className="AppContainer">
         <header className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
           <span>
             Chat App
           </span>
+          {logOutButton}
         </header>
         <Routes>
           <Route path="/" element={homewidget} />
           <Route path="/login" element={loginwidget} />
-          <Route path="/signUp" element={signupwidget} />
-          <Route path="/logout" element={
-            <LogoutApp resetToken={resetToken} loggedIn={this.state.authenticated} />
-          } />
+          <Route path="/signup" element={signupwidget} />
         </Routes>
       </div>
     );
