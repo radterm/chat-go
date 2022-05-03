@@ -199,20 +199,25 @@ class LoginApp extends React.Component {
       body: "name=" + username + "&password=" + password
     }).then((response)=>{
       if(!response.ok){
-        console.log("Failed token fetch with status",response.status);
+        console.log("Failed token fetch with status", response.status);
         this.authFailed();
-        return;
+        throw "Failed token fetch with status " + response.status;
       }
       return response.json();
-    }).then(data => {
-      console.log("Got json respose", data);
-      if(data.token!=null) {
-        this.updateToken(data.token, this.state.username);
+    }).then(
+      data => {
+        console.log("Got json respose", data);
+        if(data.token!=null) {
+          this.updateToken(data.token, this.state.username);
+        }
+        else {
+          this.authFailed();
+        }
+      },
+      error => {
+        console.log(error)
       }
-      else {
-        this.authFailed();
-      }
-    });
+    );
   }
 
   updateToken(token, name) {
@@ -232,6 +237,18 @@ class LoginApp extends React.Component {
   }
 
   render(){
+    const switchToSignUp = (
+      <div>
+        Click <a href="/signUp">here</a> to sign up
+      </div>
+    );
+    const switchToLogIn = (
+      <div>
+        Click <a href="/logIn">here</a> to log in
+      </div>
+    );
+    const switchWidget = this.props.logIn ? switchToSignUp : switchToLogIn;
+
     return (
       <form onSubmit={this.handleSubmit}>
 
@@ -241,11 +258,11 @@ class LoginApp extends React.Component {
                   autoFocus onChange={(e)=>this.handleChange('username',e)} name="username"/> <br/>
           <input type="password" value={this.state.password} onChange={(e)=>this.handleChange('password',e)}
                  name="password" /> <br />
-          <input type="submit" />
-
+          <button type="submit" >{this.props.logIn ? "Log In" : "Sign Up"}</button>
         </fieldset>
-        <span>{this.state.authState}</span>
 
+        <span>{this.state.authState}</span>
+        {switchWidget}
       </form>
     );
   }
@@ -320,22 +337,29 @@ class App extends React.Component {
   }
 
   render() {
-    const setToken = (tok, name)=>{
-      document.cookie = tokenCookieName    + "=" + tok  + "; path=/;";
-      document.cookie = usernameCookieName + "=" + name + "; path=/;";
-      this.setState({token: tok, username: name, authenticated: true});
-    };
     const resetToken = ()=>{
       document.cookie = tokenCookieName    + "=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/;";
       document.cookie = usernameCookieName + "=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/;";
       this.setState({token: "", username: "", authenticated: false});
     }
+    const setToken = (tok, name)=>{
+      if(tok===0){
+        resetToken();
+        return;
+      }
+      document.cookie = tokenCookieName    + "=" + tok  + "; path=/;";
+      document.cookie = usernameCookieName + "=" + name + "; path=/;";
+      this.setState({token: tok, username: name, authenticated: true});
+    };
+    
     // const loggedOut = ()=>{return this.state.tok===0;};
     const chatapp = (<ChatApp socketUrl={this.props.socketUrl} username={this.state.username} />);
-    const loginapp = (<LoginApp tokenUrl={this.props.tokenUrl} updateToken={setToken} />);
+    const loginapp = (<LoginApp tokenUrl={this.props.tokenUrl} logIn={true} updateToken={setToken} />);
+    const signUpapp = (<LoginApp tokenUrl={this.props.signUpUrl} logIn={false} updateToken={setToken} />);
     const navigatetologin = (<Navigate replace to="/login" />);
     const navigatetohome = (<Navigate replace to="/" />);
     const loginwidget = this.state.authenticated ? navigatetohome : loginapp;
+    const signupwidget = this.state.authenticated ? navigatetohome : signUpapp;
     const homewidget = this.state.authenticated ? chatapp : navigatetologin ;
     return (
       <div className="App">
@@ -348,6 +372,7 @@ class App extends React.Component {
         <Routes>
           <Route path="/" element={homewidget} />
           <Route path="/login" element={loginwidget} />
+          <Route path="/signUp" element={signupwidget} />
           <Route path="/logout" element={
             <LogoutApp resetToken={resetToken} loggedIn={this.state.authenticated} />
           } />

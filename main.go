@@ -51,6 +51,8 @@ func main() {
 
 	app.Post("/api/v1/token", authApp.Login)
 
+	app.Post("/api/v1/signUp", authApp.SignUp)
+
 	// JWT Middleware with Header = Authorization: Bearer
 	app.Use("/api/v1/auth", jwtware.New(jwtware.Config{
 		SigningKey: tokenSecret,

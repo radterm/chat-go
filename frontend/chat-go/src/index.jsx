@@ -14,12 +14,17 @@ console.log("Port", turl.port)
 
 const chatUrl = "ws://" + turl.hostname + ":" + turl.port + "/api/v1/chat/socket"
 const loginUrl = "http://" + turl.hostname + ":" + turl.port + "/api/v1/token"
+const signUpUrl = "http://" + turl.hostname + ":" + turl.port + "/api/v1/signUp"
 
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
       {/*<App socketUrl={chatUrl} tokenUrl={loginUrl} lastAuth={lastAuth} />*/}
-      <App socketUrl={chatUrl} tokenUrl={loginUrl} />
+      <App 
+        socketUrl={chatUrl} 
+        tokenUrl={loginUrl} 
+        signUpUrl={signUpUrl}
+      />
     </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')

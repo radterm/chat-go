@@ -21,15 +21,33 @@ import (
 // of course this should not be in code
 var tokenSecret = []byte("itachironnysecret")
 
+var (
+	usernameFieldId = "name"
+	// passwordFieldId = "password"
+)
+
+func (a *AuthApp) isNewUser(ctx context.Context, u User) (bool, error) {
+	filter := bson.D{{Key: usernameFieldId, Value: u.Name}}
+	count, err := a.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return false, err
+	}
+	if count > 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
 func (a *AuthApp) isPresent(u User) bool {
 	var user User
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	err := a.collection.FindOne(ctx, bson.M{"Name": u.Name}).Decode(&user)
+	filter := bson.D{{Key: usernameFieldId, Value: u.Name}}
+	err := a.collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		log.Fatal("Could not find user %s: %v", u.Name, err)
+		log.Println("Could not find user", u.Name, " : ", err)
 		return false
 	}
-	if u.Name == user.Name && u.Password == user.Password {
+	if u.Password == user.Password {
 		return true
 	}
 	return false
@@ -114,5 +132,46 @@ func (a *AuthApp) Login(c *fiber.Ctx) error {
 	}
 
 	log.Println("%s logged in successfully!", user.Name)
+	return c.JSON(fiber.Map{"token": t})
+}
+
+func (a *AuthApp) SignUp(c *fiber.Ctx) error {
+	var user User
+	user.Name = c.FormValue("name")
+	user.Password = c.FormValue("password")
+	log.Println("Got user ", user.Name)
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	if unregistered, err := a.isNewUser(ctx, user); err != nil {
+		log.Println("User ", user.Name, " not verified due to Database issue: ", err)
+		return c.SendStatus(fiber.StatusInternalServerError)
+	} else if !unregistered {
+		log.Println("User ", user.Name, " already exists")
+		return c.SendStatus(fiber.StatusConflict)
+	}
+
+	id, insertErr := a.collection.InsertOne(ctx, user)
+	if insertErr != nil {
+		log.Println("User ", user.Name, " not created due to Database issue: ", insertErr)
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	log.Println("User ", user.Name, " created with id ", id)
+
+	// Create the Claims
+	claims := jwt.MapClaims{
+		"name": user.Name,
+		"exp":  time.Now().Add(time.Hour * 72).Unix(),
+	}
+
+	// Create token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Generate encoded token and send it as response.
+	t, err := token.SignedString(tokenSecret)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	log.Println(user.Name, " logged in successfully!")
 	return c.JSON(fiber.Map{"token": t})
 }
