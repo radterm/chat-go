@@ -18,10 +18,18 @@
   height: 10vmin;
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   font-size: 8vmin;
   color: white;
+}
+
+.App-header-left {
+  display: inline-flex;
+}
+
+.App-header-right {
+  display: inline-flex;
 }
 
 .App-link {
@@ -36,3 +44,4 @@
     transform: rotate(360deg);
   }
 }
+

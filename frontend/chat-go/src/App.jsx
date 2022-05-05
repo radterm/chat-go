@@ -1,6 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import './chat.css';
+import './button.css';
 import React from 'react';
 import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
 
@@ -49,13 +50,13 @@ class chat {
 
 function ChatMessage(props) {
   return (
-    <div class="chat-message clearfix">
+    <div className="chat-message clearfix">
 
-      <div class="chat-message-content clearfix">
+      <div className="chat-message-content clearfix">
 
-        <div class="chat-message-header">
+        <div className="chat-message-header">
 
-          <span class="chat-time">{props.chat.time}</span>
+          <span className="chat-time">{props.chat.time}</span>
 
           <h5>{props.chat.name}</h5>
 
@@ -99,7 +100,7 @@ class ChatHistory extends React.Component {
   }
   render() {
     return (
-      <div class="chat-history-container" ref={this.chatscrollref}>
+      <div className="chat-history-container" ref={this.chatscrollref}>
       {
         this.state.chats.map(chat =>
           <div>
@@ -249,7 +250,7 @@ class LoginApp extends React.Component {
       path={this.props.logIn ? "/signup" : "/login"} 
       message={this.props.logIn ? "Sign Up" : "Log In"} 
     ></NavButton>);
-    
+
     const switchWidget = (<div>
       {this.props.logIn ? "Dont have an account?" : "Already have an account?"} <br />
       {switchButton}
@@ -344,7 +345,7 @@ class App extends React.Component {
     };
 
     const logOutButton = this.state.authenticated ? (
-      <button class="logout" onClick={
+      <button className="header logout" onClick={
         ()=>{
           console.log("Resetting token");
           resetToken();
@@ -363,11 +364,15 @@ class App extends React.Component {
     return (
       <div className="AppContainer">
         <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <span>
-            Chat App
-          </span>
-          {logOutButton}
+          <div className="App-header-left">
+            <img src={logo} className="App-logo" alt="logo" />
+            <span>
+              Chat App
+            </span>
+          </div>
+          <div className="App-header-right">
+            {logOutButton}
+          </div>
         </header>
         <Routes>
           <Route path="/" element={homewidget} />
