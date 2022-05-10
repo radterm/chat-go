@@ -2,6 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import './chat.css';
 import './button.css';
+import './form.css'
 import React from 'react';
 import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
 
@@ -29,9 +30,13 @@ class ChatForm extends React.Component {
 
         <fieldset>
           
-          <input type="text" value={this.state.value} placeholder="Type message here" 
-                  autoFocus onChange={this.handleChange} />
-          <input type="hidden" />
+          <div className="textarea-holder">
+            <textarea rows="1" value={this.state.value} placeholder="Type message here" 
+                    autoFocus onChange={this.handleChange} />
+          </div>
+          <div className="chat-submit">
+            <button className="arrow-right" type="submit" ></button>
+          </div>
 
         </fieldset>
 
@@ -172,7 +177,6 @@ function NavButton(props){
 class LoginApp extends React.Component {
   constructor(props) {
     super(props);
-    this.url = props.tokenUrl
     this.updateMasterToken = props.updateToken
     this.state = {username: '', password: '', authState: 'unauthenticated'};
     this.handleChange = this.handleChange.bind(this);
@@ -239,7 +243,7 @@ class LoginApp extends React.Component {
 
   handleSubmit(event) {
     var formdata = new FormData(event.target);
-    this.postData(this.url, formdata.get("username"), formdata.get("password"))
+    this.postData(this.props.tokenUrl, formdata.get("username"), formdata.get("password"))
     this.setState({authState: "authenticating"});
     event.preventDefault();
   }
@@ -257,22 +261,24 @@ class LoginApp extends React.Component {
     </div>);
 
     return (
-      <div>
-        <form onSubmit={this.handleSubmit}>
+      <div className="outer-form-container">
+        <div className="form-container">
+          <form onSubmit={this.handleSubmit}>
 
-          <fieldset>
-            
-            <input type="text" value={this.state.username} placeholder="Type username" 
-                    autoFocus onChange={(e)=>this.handleChange('username',e)} name="username"/> <br/>
-            <input type="password" value={this.state.password} onChange={(e)=>this.handleChange('password',e)}
-                   name="password" /> <br />
-            <button type="submit" >{this.props.logIn ? "Log In" : "Sign Up"}</button>
-          </fieldset>
-          <span>{this.state.authState}</span> 
-        </form>
+            <fieldset>
+              
+              <input type="text" value={this.state.username} placeholder="username" 
+                      autoFocus onChange={(e)=>this.handleChange('username',e)} name="username"/> <br/>
+              <input type="password" value={this.state.password} onChange={(e)=>this.handleChange('password',e)}
+                     name="password" placeholder="password"  /> <br />
+              <button type="submit" >{this.props.logIn ? "Log In" : "Sign Up"}</button>
+            </fieldset>
+            <span>{this.state.authState}</span> 
+          </form>
 
-        <br /> <br /><br />
-        {switchWidget}
+          <br /> <br /><br />
+          {switchWidget}
+        </div>
       </div>
     );
   }
@@ -354,8 +360,8 @@ class App extends React.Component {
     ) : (<span></span>);
 
     const chatapp = (<ChatApp socketUrl={this.props.socketUrl} username={this.state.username} />);
-    const loginapp = (<LoginApp history tokenUrl={this.props.tokenUrl} logIn={true} updateToken={setToken} />);
-    const signUpapp = (<LoginApp history tokenUrl={this.props.signUpUrl} logIn={false} updateToken={setToken} />);
+    const loginapp = (<LoginApp tokenUrl={this.props.tokenUrl} logIn={true} updateToken={setToken} />);
+    const signUpapp = (<LoginApp tokenUrl={this.props.signUpUrl} logIn={false} updateToken={setToken} />);
     const navigatetologin = (<Navigate replace to="/login" />);
     const navigatetohome = (<Navigate replace to="/" />);
     const loginwidget = this.state.authenticated ? navigatetohome : loginapp;
