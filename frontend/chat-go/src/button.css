@@ -1,7 +1,7 @@
 button.header.logout {
   margin-left: 2vmin;
   margin-right: 2vmin;
-  font-size: 0.5em;
+  font-size: 0.3em;
 }
 
 button {
@@ -15,7 +15,7 @@ button {
   cursor: pointer;
   display: inline-block;
   font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
-  font-size: 0.7em;
+  font-size: 1em;
   padding: 0.5em 1em;
   font-weight: 600;  
   text-align: center;

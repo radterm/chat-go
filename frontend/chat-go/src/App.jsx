@@ -276,6 +276,8 @@ class LoginApp extends React.Component {
             <span>{this.state.authState}</span> 
           </form>
 
+          <hr />
+
           <br /> <br /><br />
           {switchWidget}
         </div>

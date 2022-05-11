@@ -11,7 +11,7 @@
 }
 
 .outer-form-container {
-	background-color: #a7c0cd;
+	background-color: #79848a;
 	height: calc(100vh - 10vmin);
 }
 
@@ -19,16 +19,14 @@ div.form-container {
 	width: 80%;
 	height:  80%;
 	max-width: 501px;
-/* 	margin: auto; */
 	padding: 1vw;
 	box-shadow: 2px 2px 4px #000000;
 	background-color: whitesmoke;
 }
 
-div.form-container>form {
-	border-style: none none solid none;
-	border-color: gray;
-	border-width: 2px;
+div.form-container hr {
+	width: 90%;
+	background-color: lightgrey;
 }
 
 div.form-container > * {
