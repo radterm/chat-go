@@ -15,6 +15,7 @@ console.log("Port", turl.port)
 const chatUrl = "ws://" + turl.hostname + ":" + turl.port + "/api/v1/chat/socket"
 const loginUrl = "http://" + turl.hostname + ":" + turl.port + "/api/v1/token"
 const signUpUrl = "http://" + turl.hostname + ":" + turl.port + "/api/v1/signUp"
+const friendListUrl = "http://" + turl.hostname + ":" + turl.port + "/api/v1/auth/friends"
 
 ReactDOM.render(
   <React.StrictMode>
@@ -24,6 +25,7 @@ ReactDOM.render(
         socketUrl={chatUrl} 
         tokenUrl={loginUrl} 
         signUpUrl={signUpUrl}
+        friendListUrl={friendListUrl}
       />
     </BrowserRouter>
   </React.StrictMode>,
