@@ -3,7 +3,7 @@ import './App.css';
 import './chat.css';
 import './button.css';
 import './form.css'
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
 
 class ChatForm extends React.Component {
@@ -305,6 +305,64 @@ function getCookie(cname) {
   return "";
 }
 
+function FriendListApp(props) {
+  const [friends, setFriends] = useState(null);
+
+  useEffect(() => {
+    fetch(props.friendListUrl, {
+      method: 'GET',
+      mode: 'cors', 
+      cache: 'no-cache',
+      credentials: 'same-origin',
+      headers: {
+        "Authorization": "Bearer " + props.token,
+      }
+    }).then((response)=>{
+      if(!response.ok){
+        throw "Failed token fetch with status " + response.status;
+      }
+      return response.json();
+    }).then(
+      data => {
+        console.log("Got json respose", data);
+        if(data.friends!=null) {
+          setFriends(data.friends);
+        }
+      },
+      error => {
+        console.log(error);
+      }
+    );
+  }, []);
+
+
+  let friendListContent;
+  if(friends!==null){
+    friendListContent = friends.map(friend =>
+      <div key={friend} className="friend" onClick={
+        ()=>{
+          props.setFriend(friend);
+        }
+      }>
+        <span>{friend}</span>
+        <hr />
+      </div>
+    );  
+  } else {
+    friendListContent = (
+      <div className="friend friend-loading">
+        <span>"Loading"</span>
+        <hr />
+      </div>
+    );
+  }
+  return (
+    <div className="friendList">
+      {friendListContent}
+    </div>
+  );
+}
+
 
 class App extends React.Component {
   constructor(props) {
@@ -312,7 +370,8 @@ class App extends React.Component {
     this.state = {
       token: "", 
       username: "",
-      authenticated: false
+      authenticated: false,
+      target: null
     };
   }
 
@@ -352,6 +411,15 @@ class App extends React.Component {
       this.setState({token: tok, username: name, authenticated: true});
     };
 
+    const setTarget = (name)=>{
+      console.log("target acquired", name);
+      this.setState({target: name});
+    };
+    const resetTarget = ()=>{
+      console.log("Resetting target");
+      this.setState({target: null});
+    };
+
     const logOutButton = this.state.authenticated ? (
       <button className="header logout" onClick={
         ()=>{
@@ -364,11 +432,19 @@ class App extends React.Component {
     const chatapp = (<ChatApp socketUrl={this.props.socketUrl} username={this.state.username} />);
     const loginapp = (<LoginApp tokenUrl={this.props.tokenUrl} logIn={true} updateToken={setToken} />);
     const signUpapp = (<LoginApp tokenUrl={this.props.signUpUrl} logIn={false} updateToken={setToken} />);
+    const friendListApp = (<FriendListApp friendListUrl={this.props.friendListUrl} token={this.state.token} setFriend={setTarget} />);
     const navigatetologin = (<Navigate replace to="/login" />);
     const navigatetohome = (<Navigate replace to="/" />);
-    const loginwidget = this.state.authenticated ? navigatetohome : loginapp;
-    const signupwidget = this.state.authenticated ? navigatetohome : signUpapp;
-    const homewidget = this.state.authenticated ? chatapp : navigatetologin ;
+    let loginwidget = this.state.authenticated ? navigatetohome : loginapp;
+    let signupwidget = this.state.authenticated ? navigatetohome : signUpapp;
+    let homewidget;
+    if(!this.state.authenticated){
+      homewidget = navigatetologin;
+    } else if(this.state.target===null) {
+      homewidget = friendListApp;
+    } else{
+      homewidget = chatapp;
+    }
     return (
       <div className="AppContainer">
         <header className="App-header">

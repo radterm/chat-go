@@ -139,6 +139,7 @@ p { margin: 0; }
 }
 
 .chat-message-header {
+  display: flex;
   flex-direction: row;
   justify-content: space-between;
 }
