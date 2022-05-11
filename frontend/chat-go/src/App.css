@@ -28,6 +28,8 @@
 }
 
 .App-header {
+  box-sizing: content-box;
+  padding: 0.1em;
   background-color: #282c34;
   height: 10vmin;
   display: flex;

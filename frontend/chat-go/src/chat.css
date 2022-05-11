@@ -93,9 +93,12 @@ textarea:focus {
 }
 
 button.arrow-right {
+  border-radius: 0px;
+  box-shadow: none;
   width: 0; 
   height: 0; 
   padding: 0;
+  border-right: none;
   border-top: 1em solid transparent;
   border-bottom: 1em solid transparent;
   border-left: 1em solid #2ea44f;

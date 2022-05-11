@@ -5,7 +5,7 @@
 	align-items: center;
 }
 
-.outer-form-container * {
+.outer-form-container :not(button) {
 	padding: 5px;
 	border-radius: 10px;
 }
