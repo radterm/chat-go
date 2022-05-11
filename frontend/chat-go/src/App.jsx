@@ -52,10 +52,11 @@ class ChatForm extends React.Component {
 }
 
 class chat {
-  constructor(name, time, msg){
+  constructor(name, time, msg, target){
     this.name = name;
     this.time = time;
     this.msg = msg;
+    this.target = target;
   }
 }
 
@@ -63,9 +64,9 @@ function ChatMessage(props) {
   return (
     <div className="chat-message clearfix">
 
-      <div className="chat-message-content clearfix">
+      <div className={"chat-message-content clearfix" + (props.me==="no"?" chat-message-content-other":"")}>
 
-        <div className="chat-message-header">
+        <div className={"chat-message-header" + (props.me==="no"?" chat-message-friend-header":"") }>
 
           <span className="chat-time">{props.chat.time}</span>
 
@@ -84,10 +85,6 @@ function ChatMessage(props) {
 class ChatHistory extends React.Component {
   constructor(props){
     super(props);
-    this.state = {
-      chats : props.chats,
-      player: 0
-    };
     this.chatscrollref = React.createRef();
   }
   getSnapshotBeforeUpdate(prevProps, prevState) {
@@ -113,9 +110,9 @@ class ChatHistory extends React.Component {
     return (
       <div className="chat-history-container" ref={this.chatscrollref}>
       {
-        this.state.chats.map(chat =>
+        this.props.chats.map(chat =>
           <div>
-            <ChatMessage chat={chat}/>
+            <ChatMessage chat={chat} me={this.props.me===chat.name?"yes":"no"} />
             <hr />
           </div>
         )
@@ -131,14 +128,13 @@ class ChatApp extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.socketUrl = props.socketUrl;
     this.state = {
-      chats : [],
-      player: props.username
+      chats : []
     };
   }
   handleSubmit(message){
     var newchats = this.state.chats;
     var d = new Date()
-    var newchat = new chat(this.state.player, d.toLocaleTimeString(), message);
+    var newchat = new chat(this.props.username, d.toLocaleTimeString(), message, this.props.target);
     newchats.push(newchat);
     this.setState({chats: newchats}, () => {
       var chatmsg = JSON.stringify(newchat);
@@ -150,7 +146,7 @@ class ChatApp extends React.Component {
     console.log("Got jsn msg", chatmsgjson);
     var chatMsg = JSON.parse(chatmsgjson);
     var newchats = this.state.chats;
-    var newchat = new chat(chatMsg.name, chatMsg.time, chatMsg.msg);
+    var newchat = new chat(chatMsg.name, chatMsg.time, chatMsg.msg, chatMsg.target);
     newchats.push(newchat);
     this.setState({chats: newchats});
   }
@@ -164,9 +160,16 @@ class ChatApp extends React.Component {
     }
   }
   render(){
+    let chatsforthistarget = [];
+    for (const x of this.state.chats) {
+      if(x.target === this.props.target || x.name === this.props.target) {
+        chatsforthistarget.push(x);
+      }
+    }
+    console.log("Current chats:", chatsforthistarget);
     return (
       <div className="App">
-        <ChatHistory chats={this.state.chats}></ChatHistory>
+        <ChatHistory chats={chatsforthistarget} me={this.props.username}></ChatHistory>
         <ChatForm alertSubmit={this.handleSubmit}></ChatForm>
       </div>
     );
@@ -435,7 +438,7 @@ class App extends React.Component {
       } >Logout</button>
     ) : (<span></span>);
 
-    const chatapp = (<ChatApp socketUrl={this.props.socketUrl} username={this.state.username} />);
+    const chatapp = (<ChatApp socketUrl={this.props.socketUrl} username={this.state.username} target={this.state.target} />);
     const loginapp = (<LoginApp tokenUrl={this.props.tokenUrl} logIn={true} updateToken={setToken} />);
     const signUpapp = (<LoginApp tokenUrl={this.props.signUpUrl} logIn={false} updateToken={setToken} />);
     const friendListApp = (<FriendListApp friendListUrl={this.props.friendListUrl} token={this.state.token} setFriend={setTarget} />);

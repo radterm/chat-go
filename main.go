@@ -20,25 +20,38 @@ type chat struct {
 	Name    string `json:"name"`
 	Time    string `json:"time"`
 	Message string `json:"msg"`
+	Target  string `json:"target"`
 }
 
 var (
-	connections = make(map[int]*websocket.Conn)
-	id          int
-	idLock      sync.Mutex
+	connections  = make(map[int]*websocket.Conn)
+	userconnsmap = make(map[string][]int)
+	id           int
+	idLock       sync.Mutex
 )
 
-func broadCast(id int, msg chat) {
-	log.Println("Going to broadcast", msg)
-	for key, c := range connections {
-		if key == id {
+func sendMsg(id int, msg chat) {
+	log.Println("Going to send", msg)
+	for _, sid := range userconnsmap[msg.Name] {
+		if sid == id {
 			continue
 		}
+		c := connections[sid]
 		if err := c.WriteJSON(msg); err != nil {
 			log.Println("write error:", err)
 			break
 		}
-		log.Println("Broadcasted to", key)
+		log.Println("Sent to", sid)
+	}
+	if connids, ok := userconnsmap[msg.Target]; ok {
+		for _, sid := range connids {
+			c := connections[sid]
+			if err := c.WriteJSON(msg); err != nil {
+				log.Println("write error:", err)
+				break
+			}
+			log.Println("Sent to", sid)
+		}
 	}
 }
 
@@ -113,12 +126,8 @@ func handleWebsocketChats(c *websocket.Conn) {
 	name := c.Locals(usernameLocalsId).(string)
 	log.Println("Got socket chat connection from user", name)
 
-	idLock.Lock()
-	id += 1
-	sessionId := id
-	idLock.Unlock()
+	sessionId := addSessId(c, name)
 
-	connections[sessionId] = c
 	log.Println("Got sessionId", sessionId)
 
 	// websocket.Conn bindings https://pkg.go.dev/github.com/fasthttp/websocket?tab=doc#pkg-index
@@ -134,9 +143,39 @@ func handleWebsocketChats(c *websocket.Conn) {
 		if name != chatMsg.Name {
 			log.Println("Got message from %s impersonating %s", name, chatMsg.Name)
 		}
-		go broadCast(sessionId, chatMsg)
+		go sendMsg(sessionId, chatMsg)
 	}
-	delete(connections, sessionId)
+	delSessId(name, sessionId)
+}
+
+func delSessId(name string, sessId int) {
+	delete(connections, sessId)
+	connids, _ := userconnsmap[name]
+	newconnids := make([]int, 0)
+	for _, connid := range connids {
+		if connid == sessId {
+			continue
+		}
+		newconnids = append(newconnids, connid)
+	}
+	userconnsmap[name] = newconnids
+}
+
+func addSessId(c *websocket.Conn, name string) int {
+	idLock.Lock()
+	id += 1
+	sessionId := id
+	idLock.Unlock()
+
+	connections[sessionId] = c
+
+	if connids, ok := userconnsmap[name]; !ok {
+		userconnsmap[name] = []int{sessionId}
+	} else {
+		userconnsmap[name] = append(connids, sessionId)
+	}
+
+	return sessionId
 }
 
 func getUsernameWithToken(c *fiber.Ctx) error {

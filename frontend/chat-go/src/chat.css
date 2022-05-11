@@ -135,13 +135,21 @@ p { margin: 0; }
 
 .chat-message-content {
   /* margin-left: 56px; */
-  padding: 5px;
+  padding: 5px 20vw 5px 5px;
+}
+
+.chat-message-content-other {
+  padding: 5px 5px 5px 20vw;
 }
 
 .chat-message-header {
   display: flex;
-  flex-direction: row;
+  flex-direction: row-reverse;
   justify-content: space-between;
+}
+
+.chat-message-friend-header {
+  flex-direction: row;
 }
 
 .chat-time {
