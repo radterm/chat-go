@@ -60,6 +60,8 @@ func main() {
 
 	app.Get("/api/v1/auth/user", getUsernameWithToken)
 
+	app.Get("/api/v1/auth/friends", authApp.GetFriendsWithToken)
+
 	// JWT Middleware with Cookie = authorization-token
 	app.Use("/api/v1/chat", jwtware.New(jwtware.Config{
 		SigningKey:  tokenSecret,

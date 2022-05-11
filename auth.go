@@ -175,3 +175,39 @@ func (a *AuthApp) SignUp(c *fiber.Ctx) error {
 	log.Println(user.Name, " logged in successfully!")
 	return c.JSON(fiber.Map{"token": t})
 }
+
+func (a *AuthApp) findFriends(ctx context.Context, name string) ([]string, error) {
+	filter := bson.M{}
+	cursor, err := a.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	var friends []string
+	defer cursor.Close(ctx)
+	for cursor.Next(ctx) {
+		var friend User
+		if err = cursor.Decode(&friend); err != nil {
+			return nil, err
+		}
+		if friend.Name == name {
+			continue
+		}
+		friends = append(friends, friend.Name)
+		log.Println("Found friend ", friend.Name)
+	}
+	return friends, nil
+}
+
+func (a *AuthApp) GetFriendsWithToken(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	name := claims["name"].(string)
+	log.Println("Trying to find friends of ", name)
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	friends, err := a.findFriends(ctx, name)
+	if err != nil {
+		log.Println("Error while getting friends for ", name, " : ", err)
+		return err
+	}
+	return c.JSON(fiber.Map{"friends": friends})
+}
