@@ -1,6 +1,14 @@
-This is a simple chat application written in Golang and ReactJs
+## Details
 
-The frontend and backend servers are run separately
+This is a simple chat application written in Golang and ReactJs.
+It uses mongodb as its database to store user details.
+
+The frontend and backend servers are run separately.
+Authentication between frontend and backend is done through JWTs.
+
+The frontend is fully responsive.
+
+## How to run
 
 First run the backend server
 ```sh
@@ -13,9 +21,7 @@ cd frontend/chat-go
 npm start
 ```
 
-# New Feature
-Use JWTs in the backend for all authentication. Check a specific cookie for a valid token for only websocket connections.
-The frontend wraps the JWT auth feature.
+## Demo
 
-# New Feature 2
-Talk to an actual Mongodb database
+
+
