@@ -122,6 +122,26 @@ class ChatHistory extends React.Component {
   }
 }
 
+function ChatAppHeader(props){
+  return (<div className="chat-app-header">
+    <div className="App-header-left">
+      <div className="chat-app-header-back chat-app-header-elem" onClick={props.backAction}>
+        <span class="material-symbols-outlined">
+          arrow_back
+        </span>
+      </div>
+    </div> 
+    <div className="App-header-right">
+      <div className="chat-app-header-elem">
+        <span class="material-symbols-outlined">
+          android_chat
+        </span>
+      </div>
+      <div className="chat-app-header-elem">{props.name}</div>
+    </div> 
+  </div>);
+}
+
 class ChatApp extends React.Component {
   constructor(props){
     super(props);
@@ -169,6 +189,7 @@ class ChatApp extends React.Component {
     console.log("Current chats:", chatsforthistarget);
     return (
       <div className="App">
+        <ChatAppHeader name={this.props.target} backAction={this.props.backAction}></ChatAppHeader>
         <ChatHistory chats={chatsforthistarget} me={this.props.username}></ChatHistory>
         <ChatForm alertSubmit={this.handleSubmit}></ChatForm>
       </div>
@@ -314,6 +335,25 @@ function getCookie(cname) {
   return "";
 }
 
+function FriendListHeader(props){
+  return (<div className="chat-app-header">
+    <div className="App-header-left">
+      <div className="chat-app-header-back chat-app-header-elem">
+        <span>
+          Friends
+        </span>
+      </div>
+    </div> 
+    <div className="App-header-right">
+      <div className="chat-app-header-elem">
+        <span class="material-symbols-outlined">
+          android_chat
+        </span>
+      </div>
+    </div> 
+  </div>);
+}
+
 function FriendListApp(props) {
   const [friends, setFriends] = useState(null);
 
@@ -367,6 +407,7 @@ function FriendListApp(props) {
   }
   return (
     <div className="friendList">
+      <FriendListHeader />
       {friendListContent}
     </div>
   );
@@ -408,7 +449,7 @@ class App extends React.Component {
     const resetToken = ()=>{
       document.cookie = tokenCookieName    + "=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/;";
       document.cookie = usernameCookieName + "=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/;";
-      this.setState({token: "", username: "", authenticated: false});
+      this.setState({token: "", username: "", authenticated: false, target: null});
     }
     const setToken = (tok, name)=>{
       if(tok===0){
@@ -438,7 +479,10 @@ class App extends React.Component {
       } >Logout</button>
     ) : (<span></span>);
 
-    const chatapp = (<ChatApp socketUrl={this.props.socketUrl} username={this.state.username} target={this.state.target} />);
+    const chatapp = (<ChatApp 
+            socketUrl={this.props.socketUrl} username={this.state.username} 
+            target={this.state.target} backAction={resetTarget}
+        />);
     const loginapp = (<LoginApp tokenUrl={this.props.tokenUrl} logIn={true} updateToken={setToken} />);
     const signUpapp = (<LoginApp tokenUrl={this.props.signUpUrl} logIn={false} updateToken={setToken} />);
     const friendListApp = (<FriendListApp friendListUrl={this.props.friendListUrl} token={this.state.token} setFriend={setTarget} />);

@@ -62,3 +62,43 @@
   }
 }
 
+.chat-app-header {
+  box-sizing: content-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  background-color: #1565c0;
+  color: #ffffff;
+  font-size: 4vmin;
+}
+
+.chat-app-header .App-header-left, .chat-app-header .App-header-right {
+  align-items: center;
+}
+
+.chat-app-header-elem {
+  padding: 3px;
+  border-radius: 5px;
+  margin: 0 3px;
+}
+
+.chat-app-header-back:hover {
+  background-color: #003c8f;
+}
+
+.chat-app-header span {
+  cursor: pointer;
+}
+
+div.friend span {
+  border: solid transparent 0.5vh;
+  padding: 0.5vh;
+  display: block;
+  cursor: pointer;
+}
+
+div.friend span:active {
+  background-color: #eeeeee;
+}
