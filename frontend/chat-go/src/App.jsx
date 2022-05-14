@@ -25,23 +25,29 @@ class ChatForm extends React.Component {
   }
 
   render(){
-    return (
+    const keyPressListener = (e) => {
+      // will submit on ENTER but not on SHIFT+ENTER
+      if(e.which === 13 && !e.shiftKey) {
+          this.handleSubmit(e);
+      }
+    };
+    const textarea = (<textarea rows="1" value={this.state.value} placeholder="Type message here" 
+                    autoFocus onChange={this.handleChange} onKeyPress={keyPressListener} />);
+    
+    const chatform = (
       <form onSubmit={this.handleSubmit}>
-
-        <fieldset>
-          
+        <fieldset>          
           <div className="textarea-holder">
-            <textarea rows="1" value={this.state.value} placeholder="Type message here" 
-                    autoFocus onChange={this.handleChange} />
+            {textarea}
           </div>
           <div className="chat-submit">
             <button className="arrow-right" type="submit" ></button>
           </div>
-
         </fieldset>
-
       </form>
     );
+
+    return chatform;
   }
 }
 
