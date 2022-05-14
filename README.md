@@ -20,8 +20,15 @@ Then run the front end server
 cd frontend/chat-go
 npm start
 ```
+## Demo
 
-## Demo for mobile
+## Snapshots from laptop browser
+
+![Screenshot from 2022-05-14 23-40-34](https://user-images.githubusercontent.com/42782646/168443846-772966c7-f79c-4ea6-9509-3deeed8feec6.png)
+![Screenshot from 2022-05-14 23-44-13](https://user-images.githubusercontent.com/42782646/168443848-5f9ca1ec-2528-4efd-abeb-3c2cdb9611f4.png)
+![Screenshot from 2022-05-14 23-47-32](https://user-images.githubusercontent.com/42782646/168443849-2af19516-65d8-4457-90f0-8b1a2dd995a0.png)
+
+## Screen recording for mobile
 
 https://user-images.githubusercontent.com/42782646/168442939-d5b3aca0-0030-40d9-b8a4-8bc3c21c5c66.mp4
 
