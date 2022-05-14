@@ -21,7 +21,8 @@ cd frontend/chat-go
 npm start
 ```
 
-## Demo
+## Demo for mobile
 
+https://user-images.githubusercontent.com/42782646/168442939-d5b3aca0-0030-40d9-b8a4-8bc3c21c5c66.mp4
 
 
