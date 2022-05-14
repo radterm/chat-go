@@ -4,7 +4,7 @@ import './chat.css';
 import './button.css';
 import './form.css'
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 class ChatForm extends React.Component {
   constructor(props) {
@@ -204,6 +204,44 @@ function NavButton(props){
   }}> {props.message} </button>);
 }
 
+function AuthState(props){
+  let authWidget;
+  switch(props.authState) {
+    case "unauthenticated":
+      authWidget = (<span></span>);
+      break;
+    case "authenticated":
+      authWidget = (<span></span>);
+      break;
+    case "authenticating":
+      if(props.logIn){
+        authWidget = (<span>Logging you in...</span>);
+      }
+      else {
+        authWidget = (<span>Signing you in...</span>);
+      }
+      break;
+    case "failed":
+      let authFailureMessage;
+      if(props.logIn){
+        authFailureMessage = "Login failed!"
+      }
+      else {
+        authFailureMessage = "Sign up failed!"
+      }
+      authWidget = (
+        <div className="auth-failed">
+          <span class="material-symbols-outlined">
+            cancel
+          </span>
+          <span>{authFailureMessage}</span>
+        </div>
+      );
+      break;
+  }
+  return authWidget;
+}
+
 class LoginApp extends React.Component {
   constructor(props) {
     super(props);
@@ -303,7 +341,8 @@ class LoginApp extends React.Component {
                      name="password" placeholder="password"  /> <br />
               <button type="submit" >{this.props.logIn ? "Log In" : "Sign Up"}</button>
             </fieldset>
-            <span>{this.state.authState}</span> 
+            <AuthState authState={this.state.authState} logIn={this.props.logIn} ></AuthState>
+            {/*<span>{this.state.authState}</span> */}
           </form>
 
           <hr />
