@@ -125,7 +125,7 @@ p { margin: 0; }
 /* ---------- LIVE-CHAT ---------- */
 
 .chat-message {
-  margin: 16px 0;
+  margin: 0.5vh 1.5vw;
 }
 
 .chat-message img {
